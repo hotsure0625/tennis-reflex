@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#070b13" />
   <title>网球反应力 · Tennis Reflex</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -30,14 +31,18 @@
         <div class="panel">
           <h1 class="panel-title" id="overlayTitle">网球反应力</h1>
           <p class="panel-text" id="overlayText">
-            用 <kbd>←</kbd> <kbd>→</kbd> 移动球拍，接住落下的网球
+            <span class="only-keyboard">用 <kbd>←</kbd> <kbd>→</kbd> 移动球拍，接住落下的网球</span>
+            <span class="only-touch">按住屏幕左右拖动，让球拍接住落下的网球</span>
           </p>
           <button class="btn" id="overlayBtn" type="button">开始游戏</button>
         </div>
       </div>
     </div>
 
-    <p class="hint">← → 移动球拍 · 每接 5 球升 1 级，球会更快</p>
+    <p class="hint">
+      <span class="only-keyboard">← → 移动球拍 · 每接 5 球升 1 级，球会更快</span>
+      <span class="only-touch">按住屏幕左右拖动 · 每接 5 球升 1 级，球会更快</span>
+    </p>
   </main>
 
   <script src="game.js"></script>

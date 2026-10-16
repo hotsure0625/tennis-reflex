@@ -65,7 +65,9 @@
     ball: null,
     spawnTimer: 0,
     toast: null, // { text, t } 升级提示
-    flash: 0 // 漏球时的红色闪烁
+    flash: 0, // 漏球时的红色闪烁
+    pointerActive: false,
+    pointerX: W / 2
   };
 
   const keys = { left: false, right: false };
@@ -136,6 +138,7 @@
     state.spawnTimer = 0.4;
     state.toast = null;
     state.flash = 0;
+    state.pointerActive = false;
     state.paddleX = clamp(W / 2 - PADDLE_W / 2, paddleMinX(), paddleMaxX());
     updateHud();
   }
@@ -177,15 +180,22 @@
 
   /* ================= 更新逻辑 ================= */
   function updatePaddle(dt) {
-    const dir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
-    const targetV = dir * PADDLE_SPEED;
-
-    // 平滑加减速，让球拍移动更有手感
-    state.paddleV += (targetV - state.paddleV) * Math.min(1, dt * 16);
-    state.paddleX = clamp(state.paddleX + state.paddleV * dt, paddleMinX(), paddleMaxX());
-
-    if (state.paddleX <= paddleMinX() || state.paddleX >= paddleMaxX()) {
-      state.paddleV = 0;
+    if (state.pointerActive) {
+      // 触屏 / 鼠标：朝手指位置移动，速度上限与键盘一致
+      const delta = state.pointerX - (state.paddleX + PADDLE_W / 2);
+      const maxStep = PADDLE_SPEED * dt;
+      const step = Math.abs(delta) < 1 ? delta : clamp(delta, -maxStep, maxStep);
+      state.paddleX = clamp(state.paddleX + step, paddleMinX(), paddleMaxX());
+      state.paddleV = dt > 0 ? step / dt : 0;
+    } else {
+      // 键盘：平滑加减速，让球拍移动更有手感
+      const dir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+      const targetV = dir * PADDLE_SPEED;
+      state.paddleV += (targetV - state.paddleV) * Math.min(1, dt * 16);
+      state.paddleX = clamp(state.paddleX + state.paddleV * dt, paddleMinX(), paddleMaxX());
+      if (state.paddleX <= paddleMinX() || state.paddleX >= paddleMaxX()) {
+        state.paddleV = 0;
+      }
     }
 
     state.paddleHit = Math.max(0, state.paddleHit - dt * 5.5);
@@ -481,13 +491,79 @@
   window.addEventListener("blur", function () {
     keys.left = false;
     keys.right = false;
+    state.pointerActive = false;
   });
+
+  /* ================= 触屏 / 鼠标 ================= */
+  function canvasXFromClient(clientX) {
+    const rect = canvas.getBoundingClientRect();
+    if (!rect || !rect.width) return W / 2;
+    return ((clientX - rect.left) / rect.width) * W;
+  }
+
+  function pointerDownAt(clientX) {
+    state.pointerX = clamp(canvasXFromClient(clientX), 0, W);
+    state.pointerActive = true;
+  }
+
+  function attachPointerControls() {
+    if (window.PointerEvent) {
+      canvas.addEventListener("pointerdown", function (event) {
+        if (event.cancelable) event.preventDefault();
+        pointerDownAt(event.clientX);
+      });
+      canvas.addEventListener("pointermove", function (event) {
+        if (!state.pointerActive) return;
+        if (event.cancelable) event.preventDefault();
+        state.pointerX = clamp(canvasXFromClient(event.clientX), 0, W);
+      });
+      const stop = function () {
+        state.pointerActive = false;
+      };
+      canvas.addEventListener("pointerup", stop);
+      canvas.addEventListener("pointercancel", stop);
+      canvas.addEventListener("pointerleave", stop);
+    } else {
+      // 老浏览器兜底：触摸事件 + 鼠标事件
+      canvas.addEventListener(
+        "touchstart",
+        function (event) {
+          event.preventDefault();
+          if (event.touches && event.touches.length) pointerDownAt(event.touches[0].clientX);
+        },
+        { passive: false }
+      );
+      canvas.addEventListener(
+        "touchmove",
+        function (event) {
+          event.preventDefault();
+          if (state.pointerActive && event.touches && event.touches.length) {
+            state.pointerX = clamp(canvasXFromClient(event.touches[0].clientX), 0, W);
+          }
+        },
+        { passive: false }
+      );
+      canvas.addEventListener("touchend", function () {
+        state.pointerActive = false;
+      });
+      canvas.addEventListener("mousedown", function (event) {
+        pointerDownAt(event.clientX);
+      });
+      window.addEventListener("mousemove", function (event) {
+        if (state.pointerActive) state.pointerX = clamp(canvasXFromClient(event.clientX), 0, W);
+      });
+      window.addEventListener("mouseup", function () {
+        state.pointerActive = false;
+      });
+    }
+  }
 
   overlayBtn.addEventListener("click", function () {
     startOrRestart();
   });
 
   /* ================= 启动 ================= */
+  attachPointerControls();
   resetGame();
   state.phase = "ready";
   requestAnimationFrame(loop);
