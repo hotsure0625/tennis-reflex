@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>网球反应力 · Tennis Reflex</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="game">
+    <header class="hud">
+      <div class="hud-item">
+        <span class="hud-label">Score</span>
+        <span class="hud-value" id="score">0</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">Lives</span>
+        <span class="hud-value" id="lives">♥♥♥</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">Level</span>
+        <span class="hud-value" id="level">1</span>
+      </div>
+    </header>
+
+    <div class="stage">
+      <canvas id="court" width="480" height="640"></canvas>
+
+      <div class="overlay is-visible" id="overlay">
+        <div class="panel">
+          <h1 class="panel-title" id="overlayTitle">网球反应力</h1>
+          <p class="panel-text" id="overlayText">
+            用 <kbd>←</kbd> <kbd>→</kbd> 移动球拍，接住落下的网球
+          </p>
+          <button class="btn" id="overlayBtn" type="button">开始游戏</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="hint">← → 移动球拍 · 每接 5 球升 1 级，球会更快</p>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>
